@@ -9,8 +9,14 @@ class RecipeBase(BaseModel):
     ingredients: Optional[List[str]] = Field(default=None, description="List of ingredients")
     steps: Optional[List[str]] = Field(default=None, description="List of preparation steps")
     tags: Optional[List[str]] = Field(default=None, description="Tags for the recipe")
-    # Keep external API name 'metadata' while mapping from ORM attribute 'recipe_metadata'
-    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata")
+    # Expose 'metadata' publicly while mapping from ORM attribute 'recipe_metadata'
+    # validation_alias enables reading from ORM attribute; serialization_alias ensures output key remains 'metadata'
+    metadata: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Additional metadata",
+        validation_alias="recipe_metadata",
+        serialization_alias="metadata",
+    )
     avg_rating: Optional[float] = Field(default=None, description="Average rating")
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
@@ -26,6 +32,7 @@ class RecipeUpdate(BaseModel):
     ingredients: Optional[List[str]] = Field(default=None)
     steps: Optional[List[str]] = Field(default=None)
     tags: Optional[List[str]] = Field(default=None)
+    # Accept 'metadata' field in requests normally
     metadata: Optional[Dict[str, Any]] = Field(default=None)
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)

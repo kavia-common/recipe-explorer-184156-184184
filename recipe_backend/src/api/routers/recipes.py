@@ -32,14 +32,14 @@ def _apply_filters(
             pattern = f"%{t}%"
             filters.append(func.cast(Recipe.tags, func.TEXT).like(pattern))  # generic approach
     if cuisine:
-        filters.append(func.cast(Recipe.metadata, func.TEXT).like(f'%\"cuisine\": \"{cuisine}\"%'))
+        filters.append(func.cast(Recipe.recipe_metadata, func.TEXT).like(f'%\"cuisine\": \"{cuisine}\"%'))
     if difficulty:
-        filters.append(func.cast(Recipe.metadata, func.TEXT).like(f'%\"difficulty\": \"{difficulty}\"%'))
+        filters.append(func.cast(Recipe.recipe_metadata, func.TEXT).like(f'%\"difficulty\": \"{difficulty}\"%'))
     if min_time is not None:
-        filters.append(func.cast(Recipe.metadata, func.TEXT).like('%"time":'))
+        filters.append(func.cast(Recipe.recipe_metadata, func.TEXT).like('%"time":'))
         # filter strictly by numeric needs richer JSON operators; for SQLite generic fallback skip strict compare
     if max_time is not None:
-        filters.append(func.cast(Recipe.metadata, func.TEXT).like('%"time":'))
+        filters.append(func.cast(Recipe.recipe_metadata, func.TEXT).like('%"time":'))
     if filters:
         query = query.filter(and_(*filters))
     return query
@@ -93,7 +93,7 @@ def create_recipe(
         ingredients=recipe.ingredients,
         steps=recipe.steps,
         tags=recipe.tags,
-        metadata=recipe.metadata,
+        recipe_metadata=recipe.metadata,
     )
     db.add(obj)
     db.commit()
@@ -129,7 +129,9 @@ def update_recipe(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
 
     for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(obj, field, value)
+        # Map external field name 'metadata' to ORM attribute 'recipe_metadata'
+        target_field = "recipe_metadata" if field == "metadata" else field
+        setattr(obj, target_field, value)
 
     db.add(obj)
     db.commit()

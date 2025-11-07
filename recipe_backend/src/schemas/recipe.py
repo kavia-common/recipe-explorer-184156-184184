@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class RecipeBase(BaseModel):
@@ -9,8 +9,11 @@ class RecipeBase(BaseModel):
     ingredients: Optional[List[str]] = Field(default=None, description="List of ingredients")
     steps: Optional[List[str]] = Field(default=None, description="List of preparation steps")
     tags: Optional[List[str]] = Field(default=None, description="Tags for the recipe")
+    # Keep external API name 'metadata' while mapping from ORM attribute 'recipe_metadata'
     metadata: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata")
     avg_rating: Optional[float] = Field(default=None, description="Average rating")
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class RecipeCreate(RecipeBase):
@@ -25,13 +28,14 @@ class RecipeUpdate(BaseModel):
     tags: Optional[List[str]] = Field(default=None)
     metadata: Optional[Dict[str, Any]] = Field(default=None)
 
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
 
 class RecipeOut(RecipeBase):
     id: int = Field(..., description="Recipe ID")
     owner_id: int = Field(..., description="Owner user id")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RatingCreate(BaseModel):

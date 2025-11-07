@@ -81,7 +81,9 @@ class Recipe(Base):
     ingredients: Mapped[List[str] | None] = mapped_column(ArrayOfString(), nullable=True)
     steps: Mapped[List[str] | None] = mapped_column(ArrayOfString(), nullable=True)
     tags: Mapped[List[str] | None] = mapped_column(ArrayOfString(), nullable=True)
-    metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONType, nullable=True)
+    # Use a non-reserved attribute name for JSON metadata.
+    # Keep the database column name as 'recipe_metadata' (new) since there is no migration system here.
+    recipe_metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONType, nullable=True)
     avg_rating: Mapped[Optional[float]] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

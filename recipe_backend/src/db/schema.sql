@@ -1,0 +1,4 @@
+-- Optional bootstrap schema reference (for documentation or manual use).
+-- Not executed automatically; use SQLAlchemy metadata.create_all in code.
+-- For Postgres, prefer migrations (e.g., Alembic) in production.
+-- This file is intentionally minimal as the authoritative schema is defined in ORM models.

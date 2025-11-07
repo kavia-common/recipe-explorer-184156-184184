@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, asc, desc, func
+from sqlalchemy import and_, asc, desc, func, cast, Text
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_current_active_user, pagination_params
@@ -30,21 +30,22 @@ def _apply_filters(
         # tags stored as array/JSON - check overlap; SQLite fallback: simple LIKE across serialized json
         for t in tags:
             pattern = f"%{t}%"
-            filters.append(func.cast(Recipe.tags, func.TEXT).like(pattern))  # generic approach
+            filters.append(cast(Recipe.tags, Text).like(pattern))  # generic approach
     if cuisine:
-        filters.append(func.cast(Recipe.recipe_metadata, func.TEXT).like(f'%\"cuisine\": \"{cuisine}\"%'))
+        filters.append(cast(Recipe.recipe_metadata, Text).like(f'%\\"cuisine\\": \\"{cuisine}\\"%'))
     if difficulty:
-        filters.append(func.cast(Recipe.recipe_metadata, func.TEXT).like(f'%\"difficulty\": \"{difficulty}\"%'))
+        filters.append(cast(Recipe.recipe_metadata, Text).like(f'%\\"difficulty\\": \\"{difficulty}\\"%'))
     if min_time is not None:
-        filters.append(func.cast(Recipe.recipe_metadata, func.TEXT).like('%"time":'))
+        filters.append(cast(Recipe.recipe_metadata, Text).like('%"time":'))
         # filter strictly by numeric needs richer JSON operators; for SQLite generic fallback skip strict compare
     if max_time is not None:
-        filters.append(func.cast(Recipe.recipe_metadata, func.TEXT).like('%"time":'))
+        filters.append(cast(Recipe.recipe_metadata, Text).like('%"time":'))
     if filters:
         query = query.filter(and_(*filters))
     return query
 
 
+# PUBLIC_INTERFACE
 @router.get("", response_model=List[RecipeOut], summary="List recipes with optional filters")
 def list_recipes(
     search: Optional[str] = None,
@@ -77,6 +78,7 @@ def list_recipes(
     return items
 
 
+# PUBLIC_INTERFACE
 @router.post("", response_model=RecipeOut, summary="Create a recipe")
 def create_recipe(
     recipe: RecipeCreate,
@@ -101,6 +103,7 @@ def create_recipe(
     return obj
 
 
+# PUBLIC_INTERFACE
 @router.get("/{recipe_id}", response_model=RecipeOut, summary="Get recipe by id")
 def get_recipe(recipe_id: int, db: Session = Depends(get_db)):
     """
@@ -112,6 +115,7 @@ def get_recipe(recipe_id: int, db: Session = Depends(get_db)):
     return obj
 
 
+# PUBLIC_INTERFACE
 @router.put("/{recipe_id}", response_model=RecipeOut, summary="Update a recipe (owner only)")
 def update_recipe(
     recipe_id: int,
@@ -139,6 +143,7 @@ def update_recipe(
     return obj
 
 
+# PUBLIC_INTERFACE
 @router.delete("/{recipe_id}", status_code=204, summary="Delete a recipe (owner)")
 def delete_recipe(
     recipe_id: int,
@@ -158,6 +163,7 @@ def delete_recipe(
     return None
 
 
+# PUBLIC_INTERFACE
 @router.post("/{recipe_id}/rate", response_model=RecipeOut, summary="Rate a recipe (auth)")
 def rate_recipe(
     recipe_id: int,
